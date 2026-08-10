@@ -3,9 +3,9 @@ name: Android Debug CI/CD Rho.Studio®
 on:
   workflow_dispatch: 
   push:
-    branches: [ "27-plan-domain-layer-use-case-implementation" ]
+    branches: [ " " ]
   pull_request:
-    branches: [ "dev" , "pre-release" , "main" ]
+    branches: [ "dev" , "pre-release" ]
 
 jobs:
   build:
@@ -43,4 +43,4 @@ jobs:
       uses: actions/upload-artifact@v7.0.1
       with:
         name: test-reports
-        path: app/build/reports/tests/
+        path: "**/build/reports/tests/"
