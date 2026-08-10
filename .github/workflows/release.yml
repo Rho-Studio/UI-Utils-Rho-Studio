@@ -32,23 +32,11 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleDebug
 
-      # Debug: list the APK directory to see what was produced
       - name: List APK directory
-        run: |
-          echo "Contents of app/build/outputs/apk/debug:"
-          ls -la app/build/outputs/apk/debug/ || echo "Directory not found"
+        run: ls -la app/build/outputs/apk/debug/
 
-      # Rename the APK (handle different possible names)
       - name: Rename APK
-        run: |
-          APK_DIR="app/build/outputs/apk/debug"
-          # Find any .apk file (ignore if multiple, but take the first)
-          APK_FILE=$(find "$APK_DIR" -maxdepth 1 -name "*.apk" | head -n 1)
-          if [ -n "$APK_FILE" ]; then
-            echo "Found APK: $APK_FILE"
-            mv -v "$APK_FILE" "$APK_DIR/RhoStudioUI.apk"
-          else
-            echo "No APK found!" && exit 1
+        run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/RhoStudioUI.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v7.0.1
