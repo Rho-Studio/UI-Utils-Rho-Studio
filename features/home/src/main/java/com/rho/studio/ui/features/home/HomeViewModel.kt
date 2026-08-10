@@ -12,7 +12,7 @@
  * Email:        alexis.tercero@rho.studio
  * Date:         2026-08-06
  * ==============================================================================================
- * Description: ViewModel for the Home feature, managing dashboard state, session data,
+ * Description: ViewModel for the Home feature, managing feature state, session data,
  *              and providing access to available service modules.
  * ==============================================================================================
  */
@@ -36,7 +36,7 @@ class HomeViewModel : BaseViewModel() {
     private val _currentUser = MutableStateFlow<User?>(sessionManager.getCurrentUserSync())
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-    // Parametrized services for the dashboard
+    // Parametrized services for the Home experience
     private val _services = MutableStateFlow<List<ServiceModule>>(
         listOf(
             ServiceModule("inv", R.string.module_inventory, R.color.rho_red),

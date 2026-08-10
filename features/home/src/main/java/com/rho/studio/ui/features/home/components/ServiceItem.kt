@@ -27,7 +27,7 @@
  *          • Feedback: Built on Material 3 Button semantics to provide
  *            standard touch feedback and accessibility support.
  *          • Scalable Grid Integration: Designed to be used within LazyVerticalGrid
- *            for responsive dashboard layouts.
+ *            for responsive feature layouts.
  * ============================================================================
  */
 package com.rho.studio.ui.features.home.components

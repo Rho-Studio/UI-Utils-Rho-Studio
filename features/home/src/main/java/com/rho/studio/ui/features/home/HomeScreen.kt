@@ -14,7 +14,8 @@
  * ============================================================================
  * Description:
  *      The primary landing screen of the application, serving as the main
- *      dashboard for user interactions. It orchestrates the display of
+ *      Rho Studio Home screen. It establishes the primary entry point and
+ *      experience for user interactions. It orchestrates the display of
  *      the header, available services, and the footer.
  *
  *      Key Features:
