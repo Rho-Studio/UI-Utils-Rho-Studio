@@ -39,7 +39,7 @@ jobs:
         path: app/build/outputs/apk/debug/app-debug.apk
 
     - name: Upload Test Reports
-      if: always()
+      if: failure()
       uses: actions/upload-artifact@v7.0.1
       with:
         name: test-reports
