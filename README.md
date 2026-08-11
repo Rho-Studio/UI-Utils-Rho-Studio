@@ -257,11 +257,11 @@ The application is transitioning from a modular prototype to a production-harden
     - Implementation of a "Source of Truth" strategy in Repositories to handle network-to-local synchronization.
 ```mermaid
 flowchart TD
-    A[1. Acquisition<br/>LoginUseCase → AuthRepository.login()]
-    B[2. Persistence<br/>SessionRepository.saveToken()]
+    A[1. Acquisition<br/>LoginUseCase --> AuthRepository.login]
+    B[2. Persistence<br/>SessionRepository.saveToken]
     C[3. Validation<br/>ValidateTokenUseCase]
     D[4. Refresh<br/>RefreshTokenUseCase]
-    E[5. Recovery<br/>SessionManager.initializeSession()]
+    E[5. Recovery<br/>SessionManager.initializeSession]
     F[6. Invalidation<br/>LogoutUseCase]
     
     A --> B --> C
