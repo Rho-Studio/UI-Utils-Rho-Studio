@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -26,6 +27,10 @@ dependencies {
     implementation(project(path = ":core:domain"))
     implementation(project(path = ":core:data"))
     implementation(project(path = ":core:ui"))
+
+    // Dagger
+    implementation(libs.dagger)
+    ksp(libs.dagger.compiler)
     
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
