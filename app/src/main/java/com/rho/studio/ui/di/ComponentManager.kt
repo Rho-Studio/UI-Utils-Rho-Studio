@@ -7,65 +7,54 @@
  * ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
  *
  * ==============================================================================================
- * File:         SessionRepository.kt
+ * File:         ComponentManager.kt
  * Author:       Alexis Tercero
  * Email:        alexis.tercero@rho.studio
- * Date:         2026-08-04
+ * Date:         2026-08-14
  * ==============================================================================================
- * Description: Repository for persisting session data.
+ * Description: Centralized manager for the Dagger component hierarchy.
+ *              Handles the lifecycle of global (App) and scoped (User) components.
+ *              Enables session-based dependency injection by providing mechanisms to
+ *              initialize and tear down the UserComponent upon login/logout.
  * ==============================================================================================
  */
-package com.rho.studio.ui.core.data.repository
+package com.rho.studio.ui.di
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.core.content.edit
-import com.google.gson.Gson
-import com.rho.studio.ui.core.domain.model.User
+import com.rho.studio.ui.core.data.di.CoreComponent
+import com.rho.studio.ui.core.data.di.CoreModule
+import com.rho.studio.ui.core.data.di.DaggerCoreComponent
 
-/**
- * Interface defining the persistence operations for user sessions.
- */
-interface SessionRepository {
-    suspend fun saveUser(user: User)
-    suspend fun getUser(): User?
-    suspend fun clearSession()
-}
+object ComponentManager {
 
-/**
- * Implementation of [SessionRepository] using SharedPreferences.
- */
-class SessionRepositoryImpl(context: Context) : SessionRepository {
+    private lateinit var coreComponent: CoreComponent
+    private lateinit var appComponent: AppComponent
+    private var userComponent: UserComponent? = null
 
-    private val preferences: SharedPreferences =
-        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    
-    private val gson = Gson()
-
-    companion object {
-        private const val PREFS_NAME = "session_prefs"
-        private const val PREF_KEY_USER = "pref_current_user"
+    fun init(context: Context) {
+        CoreModule.init(context)
+        coreComponent = DaggerCoreComponent.builder()
+            .build()
+            
+        appComponent = DaggerAppComponent.builder()
+            .coreComponent(coreComponent)
+            .build()
     }
 
-    override suspend fun saveUser(user: User) {
-        val userJson = gson.toJson(user)
-        preferences.edit {
-            putString(PREF_KEY_USER, userJson)
+    fun getAppComponent(): AppComponent = appComponent
+
+    fun createUserComponent(): UserComponent {
+        if (userComponent == null) {
+            userComponent = DaggerUserComponent.builder()
+                .coreComponent(coreComponent)
+                .build()
         }
+        return userComponent!!
     }
 
-    override suspend fun getUser(): User? {
-        val userJson = preferences.getString(PREF_KEY_USER, null) ?: return null
-        return try {
-            gson.fromJson(userJson, User::class.java)
-        } catch (e: Exception) {
-            null
-        }
+    fun destroyUserComponent() {
+        userComponent = null
     }
 
-    override suspend fun clearSession() {
-        preferences.edit {
-            remove(PREF_KEY_USER)
-        }
-    }
+    fun getUserComponent(): UserComponent? = userComponent
 }
