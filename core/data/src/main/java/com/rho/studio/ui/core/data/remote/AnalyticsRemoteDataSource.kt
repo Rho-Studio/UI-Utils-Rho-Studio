@@ -7,31 +7,37 @@
  * ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
  *
  * ==============================================================================================
- * File:         AuthRepositoryImpl.kt
+ * File:         AnalyticsRemoteDataSource.kt
  * Author:       Alexis Tercero
  * Email:        alexis.tercero@rho.studio
- * Date:         2026-08-14
+ * Date:         2026-08-13
  * ==============================================================================================
- * Description: Repository for persisting session data.
+ * Description: Firebase analytics data layer for decoupled event logging.
  * ==============================================================================================
  */
-package com.rho.studio.ui.core.data.repository
+package com.rho.studio.ui.core.data.remote
 
-import com.rho.studio.ui.core.domain.model.Credentials
-import com.rho.studio.ui.core.domain.model.User
-import com.rho.studio.ui.core.domain.repository.AuthRepository
-import com.rho.studio.ui.core.data.remote.FirebaseRemoteDataSource
+import android.os.Bundle
+import android.util.Log
+import com.google.firebase.analytics.FirebaseAnalytics
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Production implementation of [AuthRepository] using Firebase Authentication.
+ * Wrapper around FirebaseAnalytics for decoupled event logging.
  */
 @Singleton
-class AuthRepositoryImpl @Inject constructor(
-    private val firebaseDataSource: FirebaseRemoteDataSource
-) : AuthRepository {
-    override suspend fun login(credentials: Credentials): User {
-        return firebaseDataSource.login(credentials)
+class AnalyticsRemoteDataSource @Inject constructor(
+    private val firebaseAnalytics: FirebaseAnalytics
+) {
+    fun logLogin(userId: String) {
+        Log.d("RHO_TELEMETRY", "Logging login event for user: $userId")
+        // Set the user identity for all future events in the session
+        firebaseAnalytics.setUserId(userId)
+        
+        val bundle = Bundle().apply {
+            putString(FirebaseAnalytics.Param.METHOD, "email_password")
+        }
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
     }
 }

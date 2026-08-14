@@ -7,31 +7,23 @@
  * ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
  *
  * ==============================================================================================
- * File:         AuthRepositoryImpl.kt
+ * File:         SessionRepository.kt
  * Author:       Alexis Tercero
  * Email:        alexis.tercero@rho.studio
- * Date:         2026-08-14
+ * Date:         2026-08-12
  * ==============================================================================================
- * Description: Repository for persisting session data.
+ * Description: Contract for session persistence operations.
  * ==============================================================================================
  */
-package com.rho.studio.ui.core.data.repository
+package com.rho.studio.ui.core.domain.repository
 
-import com.rho.studio.ui.core.domain.model.Credentials
 import com.rho.studio.ui.core.domain.model.User
-import com.rho.studio.ui.core.domain.repository.AuthRepository
-import com.rho.studio.ui.core.data.remote.FirebaseRemoteDataSource
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
- * Production implementation of [AuthRepository] using Firebase Authentication.
+ * Interface defining the persistence operations for user sessions.
  */
-@Singleton
-class AuthRepositoryImpl @Inject constructor(
-    private val firebaseDataSource: FirebaseRemoteDataSource
-) : AuthRepository {
-    override suspend fun login(credentials: Credentials): User {
-        return firebaseDataSource.login(credentials)
-    }
+interface SessionRepository {
+    suspend fun saveUser(user: User)
+    suspend fun getUser(): User?
+    suspend fun clearSession()
 }
