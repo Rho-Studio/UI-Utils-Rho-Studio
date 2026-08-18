@@ -6,22 +6,28 @@
  * ██║  ██║██║  ██║╚██████╔╝    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
  * ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
  *
- * ==============================================================================================
- * File:         Credentials.kt
+ * ==========================================================================
+ * File:         RhoStudioUIApp.kt
  * Author:       Alexis Tercero
  * Email:        alexis.tercero@rho.studio
- * Date:         2026-08-12
- * ==============================================================================================
- * Description: core:domain
- *  Represents the user's authentication data as standard String values.
- * ==============================================================================================
+ * Date:         2026-08-17
+ * ==========================================================================
+ * Description:
+ *      Main Application class for RhoStudio UI. Responsible for initializing
+ *      core services including Firebase and the dependency injection framework.
+ * ==========================================================================
  */
-package com.rho.studio.ui.core.domain.model
+package com.rho.studio.ui
 
-/**
- * Represents the user's authentication data.
- */
-data class Credentials(
-    val email: String,
-    val password: String
-)
+import android.app.Application
+import com.google.firebase.FirebaseApp
+import com.rho.studio.ui.di.ComponentManager
+
+class RhoStudioUIApp : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        FirebaseApp.initializeApp(this)
+        ComponentManager.init(this)
+    }
+}
