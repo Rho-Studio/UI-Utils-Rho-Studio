@@ -10,7 +10,7 @@
  * File:         HomeViewModel.kt
  * Author:       Alexis Tercero
  * Email:        alexis.tercero@rho.studio
- * Date:         2026-08-06
+ * Date:         2026-08-18
  * ==============================================================================================
  * Description: ViewModel for the Home feature, managing feature state, session data,
  *              and providing access to available service modules.
@@ -27,13 +27,14 @@ import com.rho.studio.ui.core.domain.usecase.LogoutUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
-class HomeViewModel : BaseViewModel() {
+class HomeViewModel @Inject constructor(
+    private val sessionManager: SessionManager,
+    private val logoutUseCase: LogoutUseCase
+) : BaseViewModel() {
 
-    private val sessionManager = SessionManager.getInstance()
-    private val logoutUseCase = LogoutUseCase(sessionManager)
-
-    private val _currentUser = MutableStateFlow<User?>(sessionManager.getCurrentUserSync())
+    private val _currentUser = MutableStateFlow<User?>(sessionManager.getCurrentUser())
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     // Parametrized services for the Home experience
