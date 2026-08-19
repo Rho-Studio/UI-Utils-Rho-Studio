@@ -3,7 +3,7 @@ name: Android Debug CI/CD Rho.Studio®
 on:
   workflow_dispatch: 
   push:
-    branches: [ " " ]
+    branches: [ "37-data-layer-and-dagger-di" ]
   pull_request:
     branches: [ "dev" , "pre-release" ]
 
@@ -22,6 +22,12 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
+
+    # Add this step here
+    - name: Decode Google Services JSON
+      env:
+       GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      run: echo $GOOGLE_SERVICES_JSON | base64 --decode > app/google-services.json
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
