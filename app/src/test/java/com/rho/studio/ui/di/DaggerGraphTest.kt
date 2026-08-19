@@ -1,6 +1,7 @@
 package com.rho.studio.ui.di
 
 import android.content.Context
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
 import io.mockk.every
 import io.mockk.mockk
@@ -15,6 +16,9 @@ class DaggerGraphTest {
     fun setUp() {
         mockkStatic(FirebaseAuth::class)
         every { FirebaseAuth.getInstance() } returns mockk(relaxed = true)
+
+        mockkStatic(FirebaseAnalytics::class)
+        every { FirebaseAnalytics.getInstance(any()) } returns mockk(relaxed = true)
     }
 
     @Test
