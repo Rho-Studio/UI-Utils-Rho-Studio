@@ -1,3 +1,22 @@
+/**
+ * ██████╗ ██╗  ██╗ ██████╗     ███████╗████████╗██╗   ██╗██████╗ ██╗ ██████╗
+ * ██╔══██╗██║  ██║██╔═══██╗    ██╔════╝╚══██╔══╝██║   ██║██╔══██╗██║██╔═══██╗
+ * ██████╔╝███████║██║   ██║    ███████╗   ██║   ██║   ██║██║  ██║██║██║   ██║
+ * ██╔══██╗██╔══██║██║   ██║    ╚════██║   ██║   ██║   ██║██║  ██║██║██║   ██║
+ * ██║  ██║██║  ██║╚██████╔╝    ███████║   ██║   ╚██████╔╝██████╔╝██║╚██████╔╝
+ * ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝     ╚══════╝   ╚═╝    ╚═════╝ ╚═════╝ ╚═╝ ╚═════╝
+ *
+ * ==========================================================================
+ * File:         SessionManagerTest.kt
+ * Author:       Alexis Tercero
+ * Email:        alexis.tercero@rho.studio
+ * Date:         2026-08-25
+ * ==========================================================================
+ * Description: Test suite for SessionManager.
+ *              Verifies the reactive session state machine, initialization logic,
+ *              and synchronization with the persistent repository.
+ * ==========================================================================
+ */
 package com.rho.studio.ui.core.data.manager
 
 import com.rho.studio.ui.core.domain.model.SessionState
