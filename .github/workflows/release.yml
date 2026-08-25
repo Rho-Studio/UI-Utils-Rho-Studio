@@ -3,7 +3,7 @@ name: Android Release Rho.Studio®
 on:
   workflow_dispatch:
   push:
-    branches: [ "Pre-release-v103" ]
+    branches: [ "pre-release-v103" ]
   pull_request:
     branches: [ "main" ]
 
