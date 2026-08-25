@@ -3,68 +3,87 @@
 ## 1. Project Vision & Architecture
 Rho Studio UI is a modern Android application built with **Jetpack Compose** and **MVVM** following a **Single-Activity Architecture**. 
 
-To achieve enterprise-grade scalability, we strictly implement **Clean Architecture** principles. This ensures a clear separation of concerns, framework independence, and high testability.
+To achieve scalability, implement **Domain-Driven Design (DDD)** and **Clean Architecture** principles. This ensures a clear separation of concerns, framework independence, and high testability.
 
 ---
 
-## 2. Clean Architecture Layer Responsibilities
-All contributions must respect the strict boundaries between the following three layers:
+## 2. Feature Implementation Workflow (Step-by-Step)
 
-### 2.1 The UI Layer (`features/` & `ui/`)
-*   **Role**: Handles user interaction and data presentation.
-*   **Components**: 
-    *   **Compose Screens/Components**: Purely declarative and stateless. They observe state and emit events.
-    *   **ViewModels**: Act as a bridge. They manage UI state (Loading, Error, Toast) and handle user intent by calling Use Cases.
-*   **Boundary Rule**: Never contains business logic. Never interacts directly with Repositories.
+When adding a new feature (e.g., "Settings", "Profile"), follow this **Inside-Out** sequence to ensure architectural integrity:
 
-### 2.2 The Domain Layer (`core/domain/`)
-*   **Role**: The "Heart" of the application. Contains the essential business rules.
-*   **Components**: 
-    *   **Use Cases (Interactors)**: Classes like `LoginUseCase.kt` that encapsulate a single, atomic business transaction.
-    *   **Domain Models**: Pure data entities (e.g., `User.kt`) that are framework-independent.
-*   **Boundary Rule**: **Pure Kotlin only**. Must not import `android.*` or depend on any external libraries/frameworks (except pure Kotlin ones). This layer is the "Single Source of Truth" for *logic*.
+### Step 1: Domain Layer (The Logic)
+1.  **Define Models**: Create pure Kotlin data classes in `core:domain` (e.g., `Settings.kt`).
+2.  **Define Repository Interface**: Add an interface in `core:domain` describing the data contract.
+3.  **Create Interactor (UseCase)**: Implement the business logic by inheriting from `BaseUseCase<P, R>`.
+    *   **P (Parameters)**: Use a `data class` for multiple inputs or `Unit` for none.
+    *   **R (Return)**: The raw data type (Dagger/BaseUseCase will wrap it in `Result<R>`).
+    *   **Rule**: Must be a pure Kotlin class without Android dependencies.
+    *   **Rule**: Must be testable with MockK/JUnit 5.
 
-### 2.3 The Data Layer (`core/data/`)
-*   **Role**: Manages data acquisition and persistence.
-*   **Components**: 
-    *   **Repositories**: Implementation of data fetching (API, Room, Preferences).
-    *   **Managers**: State holders like `SessionManager.kt` that coordinate global app state.
-*   **Boundary Rule**: Acts as the "Single Source of Truth" for *data state*. It implements the requirements defined by the Domain layer.
+Example:
+```kotlin
+class LoginUseCase @Inject constructor(
+    private val repository: AuthRepository
+) : BaseUseCase<Credentials, User>() {
+    override suspend fun execute(parameters: Credentials): User {
+        return repository.login(parameters)
+    }
+}
+```
 
----
+### Step 2: Data Layer (The Infrastructure)
+1.  **Implement Repository**: Create the implementation in `core:data` using Firebase, Retrofit, or DataStore.
+2.  **Dagger Binding**: Add a `@Binds` method in `CoreModule.kt` to link the interface to the implementation.
 
-## 3. Core Requirements for Contributions
-
-### 3.1 MVVM & UDF (Unidirectional Data Flow)
-- **State flows down**: From ViewModel to Composables.
-- **Events flow up**: From UI to ViewModel via lambdas.
-
-### 3.2 Single-Activity & Reactive Navigation
-- **MainActivity** is the sole navigation orchestrator.
-- **ViewModels** and **Use Cases** must **never** hold a `NavController` or trigger navigation directly.
-- **Logic**: Use Cases update the session/state in the Data layer. `MainActivity` observes this state and performs the transition (e.g., auto-routing to Login on session expiry).
-
----
-
-## 4. Implementing New Features (Profile, Feed, Chat)
-
-Every new feature should be built following the **Inside-Out** approach:
-
-1.  **Inside (Domain)**: Create the `UseCase` (e.g., `UpdateProfileUseCase`, `GetFeedUseCase`, `SendMessageUseCase`).
-    - Use the `Result<T>` wrapper for success/failure.
-    - Write a Unit Test for the logic.
-2.  **Middle (ViewModel)**: Create the bridge that transforms the Use Case `Result` into observable UI state.
-3.  **Outside (UI)**: Build the stateless Compose UI.
-    - **Feed UI**: Use `LazyColumn` for efficiency. Implement a stateless `PostItem.kt`.
-    - **Chat UI**: Implement specialized "Message Bubble" components. Input fields must update the ViewModel state immediately.
+### Step 3: UI Layer (The Presentation)
+1.  **Create ViewModel**: Inherit from `BaseViewModel`.
+    *   Use `launchSafe` or `launchWithLoading` for all coroutines.
+    *   Expose UI state via `StateFlow`.
+2.  **Dagger Multibinding**: 
+    *   Create a Dagger `@Module` for the feature.
+    *   Use `@Binds @IntoMap @ViewModelKey(MyViewModel::class)` to register it.
+    *   Add the module to the appropriate component (`AppComponent` for public, `UserComponent` for authenticated).
+3.  **Build Composables**: Create stateless Compose functions. Observe the ViewModel state in the screen-level Composable.
 
 ---
 
-## 5. Technical Constraints
-- **Atomic Transactions**: Multi-step actions (e.g., validate -> save -> sync) must be managed as a single atomic unit within a `UseCase`.
-- **Framework Independence**: Keep the Domain layer free of Android dependencies to support future Gradle modularization.
-- **Standardized Results**: Always return `Result.Success`, `Result.Error`, or `Result.Loading` from Use Cases.
+## 3. Dependency Injection Standards (Dagger 2)
+
+We use a **Multi-Tiered Dependency Graph**. Developers must respect scope boundaries:
+
+*   **@Singleton**: For infrastructure (Network, Firebase, SessionManager). Lives in `CoreComponent`.
+*   **@AppScope**: For public/login logic. Lives in `AppComponent`.
+*   **@UserScope**: For authenticated user data. Lives in `UserComponent`.
+
+**CRITICAL**: Never attempt to inject a `@UserScope` dependency into a `@Singleton` class. This will cause a memory leak or a crash.
 
 ---
-**[Rho.Studio®](https://rho.studio/) - Engineering Department** - Contact [alexis.tercero@rho.studio](mailto:alexis.tercero@rho.studio) 
 
+## 4. UI Standards & Base Classes
+
+### 4.1 BaseViewModel
+Every ViewModel **must** extend `BaseViewModel`. This provides:
+- `isLoading`: A built-in StateFlow for progress bars.
+- `launchSafe { ... }`: Automatic error handling and crash prevention.
+- `handleError(e)`: Standardized toast and error state management.
+
+### 4.2 Stateless Composables
+Divide your UI into two parts:
+1.  **Screen Composable**: "Stateful." Injects the ViewModel and passes data down.
+2.  **Component Composables**: "Stateless." Take raw data and lambdas (e.g., `onClick: () -> Unit`). This makes them previewable and testable.
+
+---
+
+## 5. Security & PII
+- **PII**: Any Personal Identifiable Information must be stored in the **Encrypted DataStore**.
+- **Session**: Global session state is managed by `SessionManager`. Use it to reactively hide/show UI elements based on authentication.
+
+---
+
+## 6. Testing Requirements
+- **Domain**: 90%+ coverage for UseCases.
+- **ViewModels**: Test state transitions using `Dispatcher.Main` delegation.
+- **Data**: Mock external SDKs (Firebase) using MockK.
+
+---
+**[Rho.Studio®](https://rho.studio/) - Engineering Department** - Contact [alexis.tercero@rho.studio](mailto:alexis.tercero@rho.studio)
