@@ -4,7 +4,7 @@ An Android Jetpack Compose app.
 [![Android CI/CD Rho.Studio®](https://github.com/Rho-Studio/UI-Utils-Rho-Studio/actions/workflows/android.yml/badge.svg)](https://github.com/Rho-Studio/UI-Utils-Rho-Studio/actions/workflows/android.yml)
 [![Android Release Rho.Studio®](https://github.com/Rho-Studio/UI-Utils-Rho-Studio/actions/workflows/release.yml/badge.svg)](https://github.com/Rho-Studio/UI-Utils-Rho-Studio/actions/workflows/release.yml)
 
-> _Document Version: 3.0 Last Updated: August 24, 2026_
+> _Document Version: 3.1 Last Updated: August 25, 2026_
 ## Enterprise-Grade Android Architecture with Jetpack Compose
 
 This document provides a comprehensive technical overview of the **Rho Studio UI** application. It serves as the primary architectural reference for developers, outlining the system's design, layer responsibilities, and technical standards.
@@ -18,7 +18,9 @@ Rho Studio UI is the **base application template** designed to establish and enf
 
 The application is a **Jetpack Compose** implementation following a **Single-Activity Architecture**, leveraging a reactive **MVVM (Model-View-ViewModel)** pattern, implementing a Multi-Tier Dagger Hierarchy and a fluid user experience driven by **Unidirectional Data Flow (UDF)**. This architectural foundation ensures a focus on **Fluid UX**, **Transactional Integrity**, and **Decoupled Business Logic**.
 
-**Contribution**: [See CONTRIBUTION.md](./CONTRIBUTION.md).
+
+> [!IMPORTANT] CONTRIBUTING
+> **In order to add a new feature**: See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Core Features:
 - **Authentication Orchestration**: Implements a production flow using Firebase Auth with a reactive session lifecycle. It ensures transactional security by synchronizing remote authentication states with automated, state-driven navigation transitions.
@@ -124,7 +126,8 @@ flowchart TD
     style DOMAIN fill:#4A4A4A,stroke:#333333,color:#FFFFFF
     style DATA fill:#D3D3D3,stroke:#D32F2F,color:#000000
 ```
-> **Key Principle**: `:features` depend only on `:core` modules (`:core:domain`, `:core:ui`), preventing circular dependencies. Feature-specific models remain within their respective feature modules.
+> [!Tip] Key Principle
+> `:features` depend only on `:core` modules (`:core:domain`, `:core:ui`), preventing circular dependencies. Feature-specific models remain within their respective feature modules.
 
 ### 2.3 Multi-Tier Dependency Injection (Dagger 2 + KSP)
 We utilize a high-performance Directed Acyclic Graph (DAG) generated at compile-time using KSP to ensure zero runtime overhead. The graph is organized into three tiers to mirror the application lifecycle:
@@ -313,7 +316,7 @@ flowchart TB
     linkStyle default stroke:#D32F2F,stroke-width:2px
 
     classDef navNode fill:#D32F2F,stroke:#FFFFFF,color:#FFFFFF
-    classDef sharedNode fill:#4A4A4A,stroke:#333333,color:#FFFFFF
+    classDef sharedNode fill:#333333,stroke:#D32F2F,color:#FFFFFF
     classDef authNode fill:#4A4A4A,stroke:#D32F2F,color:#FFFFFF
     classDef homeNode fill:#4A4A4A,stroke:#D32F2F,color:#FFFFFF
 
@@ -322,7 +325,7 @@ flowchart TB
     class LS,LVM authNode
     class HS,HVM homeNode
 
-    style Navigation fill:#333333,stroke:#D32F2F,color:#FFFFFF
+    style Navigation fill:#D3D3D3,stroke:#D32F2F,color:#000000
     style Shared fill:#4A4A4A,stroke:#333333,color:#FFFFFF
     style Auth fill:#333333,stroke:#D32F2F,color:#FFFFFF
     style Home fill:#333333,stroke:#D32F2F,color:#FFFFFF
@@ -336,7 +339,7 @@ flowchart TB
 - **BaseUseCase Pattern**: All interactors inherit from `BaseUseCase<P, R>`. This architectural anchor standardizes:
     - **Thread Safety**: Automatic execution on `Dispatchers.IO`.
     - **Result Wrapping**: Consistent use of the `Result<T>` sealed class for Success/Error states.
-    - **Functional Invocation**: Use cases are invoked as functions using the invoke operator.
+    - **Functional Invocation**: Use cases are invoked as functions using the `invoke` operator.
 
 - **Key Components**:
     - `BaseUseCase<P, R>`: Standardizes execution context (Coroutines) and error handling.
@@ -556,14 +559,58 @@ Located in `:core:ui`, the design system defines the application's visual langua
 
 ---
 
-## 5. Roadmap & Evolution: Strategic Phases
+## 5. Verification & Quality Assurance
+
+### 5.1 Automated Tests
+
+| Test Suite | Scope | Status |
+| :--- | :--- | :---: |
+| **DI Graph Audit** (`DaggerGraphTest`) | Verifies all components and providers (Firebase, Analytics) are correctly satisfied | <span style="color:#4CAF50">Passed</span> |
+| **Transactional Integrity** (`SessionManagerTest`) | Validates atomic state flow and DataStore synchronization | <span style="color:#4CAF50">Passed</span> |
+| **Business Logic** (`LoginUseCaseTest`, `LogoutUseCaseTest`) | 90%+ coverage of core transactions using MockK | <span style="color:#4CAF50">Passed</span> |
+| **CI/CD Build** | Verified on GitHub Actions including `google-services.json` integration | <span style="color:#4CAF50">Passed</span> |
+
+### 5.2 Manual QA Test Plan
+
+**Scenario 1**: Fresh Install / First Launch
+1. Open the app.
+2. Expected: App shows LoadingScreen (CircularProgress), then transitions to Login Screen once session check is complete.
+
+**Scenario 2**: Successful Login & Data Loading
+1. Enter valid Firebase credentials.
+2. Click "**Login**".
+3. Expected:
+   - Circular progress overlay appears.
+   - On success, toast "Login successful!" appears.
+   - UI transitions to Home Screen.
+   - Header displays correct user email/name.
+   - Firebase Analytics event is visible in DebugView.
+
+**Scenario 3**: Secure Logout & Session Isolation
+1. On the Home Screen, click "Logout".
+2. Expected:
+   - UI transitions immediately back to Login Screen.
+   - User input fields in Login are cleared (form reset).
+   - Verification: Using Android Profiler, confirm that @UserScope objects (e.g., HomeViewModel) are cleared from heap.
+
+### 5.3 Regression Checklist for QA
+- Verify that no `UninitializedPropertyAccessException` occurs during rapid Login/Logout cycles.
+- Verify that the `PageHeader` reactively updates when a new user logs in.
+- Confirm that Firebase Analytics events are visible in DebugView.
+- Verify that `@UserScope` objects are destroyed on logout (Android Profiler).
+
+---
+## 6. Roadmap & Evolution: Strategic Phases
 
 The application is transitioning from a modular prototype to a production-hardened system. The evolution is structured into three strategic phases:
 
-### Phase I: Dependency Orchestration & Decoupling
+### Phase I: Dependency Orchestration & Decoupling - [COMPLETED v1.0.3]
 - **Dagger Migration**: Implementation of **Dagger 2** to replace manual Service Locators.
     - Define `@Component` and `@Module` boundaries for `:core` and `:features`.
     - Implement `@Inject` for UseCase and ViewModel construction to ensure compile-time dependency safety.
+- **ViewModel Multibinding**: Centralized ViewModel registry using `@IntoMap` and `DaggerViewModelFactory`.
+- **Component Dependencies**: Hierarchical component architecture with `CoreComponent`, `AppComponent`, and `UserComponent`.
+- **Session Isolation**: Physical destruction of `@UserScope` graph on logout to prevent data leakage.
 - **Interface Segregation**: Strict enforcement of domain-defined interfaces to further isolate the Data Layer from Business Logic.
 
 ### Phase II: Transactional Integrity & persistence
@@ -571,9 +618,6 @@ The application is transitioning from a modular prototype to a production-harden
     - Implementation of an atomic token refresh mechanism within the Data Layer.
     - Securing critical transaction flows by validating session integrity before high-stakes domain executions.
     - Complete token lifecycle: Acquisition → Persistence → Validation → Refresh → Recovery → Invalidation.
-- **Offline-First with Room**:
-    - Integration of **Room Database** as the local cache for service modules.
-    - Implementation of a "Source of Truth" strategy in Repositories to handle network-to-local synchronization.
 ```mermaid
 flowchart TD
     A[1. Acquisition<br/>LoginUseCase --> AuthRepository.login]
@@ -589,76 +633,50 @@ flowchart TD
     E --> C
     F --> H[Reset AuthState]
     
-    style A fill:#e94560,stroke:#c62828,color:#ffffff
-    style B fill:#16213e,stroke:#0f3460,color:#ffffff
-    style C fill:#1a1a2e,stroke:#e94560,color:#ffffff
-    style D fill:#0f3460,stroke:#16213e,color:#ffffff
-    style E fill:#16213e,stroke:#0f3460,color:#ffffff
-    style F fill:#e94560,stroke:#c62828,color:#ffffff
-    style G fill:#0f3460,stroke:#16213e,color:#ffffff
-    style H fill:#1a1a2e,stroke:#e94560,color:#ffffff
+    style A fill:#D32F2F,stroke:#FFFFFF,color:#FFFFFF
+    style B fill:#333333,stroke:#D32F2F,color:#FFFFFF
+    style C fill:#4A4A4A,stroke:#333333,color:#FFFFFF
+    style D fill:#333333,stroke:#D32F2F,color:#FFFFFF
+    style E fill:#4A4A4A,stroke:#333333,color:#FFFFFF
+    style F fill:#D32F2F,stroke:#FFFFFF,color:#FFFFFF
+    style G fill:#333333,stroke:#D32F2F,color:#FFFFFF
+    style H fill:#4A4A4A,stroke:#333333,color:#FFFFFF
 ```
 
-### Phase III: Verification & Quality Engineering
-- **Domain Test Suite**: Achieving 90%+ coverage for `:core:domain` logic using JUnit 5 and MockK.
-- **UI & Regression Testing**:
-    - Implementation of **Compose UI Tests** for critical user journeys (Login, Home navigation).
-    - Integration of **Screenshot Testing** to ensure visual consistency across the Rho Studio design system.
-- **Performance Profiling**: Regular benchmarking of recomposition counts and memory allocation in high-density feature screens.
+- **Offline-First with Room**:
+    - Integration of **Room Database** as the local cache for service modules.
+    - Implementation of a "Source of Truth" strategy in Repositories to handle **network-to-local synchronization**.
+
 ```mermaid
-flowchart LR
-    subgraph Current["Current Flow"]
-        C1[UI] --> C2[ViewModel] --> C3[UseCase] --> C4[Repository] --> C5[SharedPreferences/Mock Auth]
+flowchart TD
+    subgraph Domain["Domain Layer"]
+        UC["TokenUseCases<br/>- ValidateTokenUseCase<br/>- RefreshTokenUseCase<br/>- RevokeTokenUseCase"]
+        Entities["AuthToken.kt<br/>- accessToken<br/>- refreshToken<br/>- expiresAt"]
     end
     
-    subgraph Planned["Planned Flow"]
-        P1[UI] --> P2[ViewModel] --> P3[UseCase] --> P4[Repository]
-        P4 --> P5[Local: Room Database]
-        P4 --> P6[Remote: Retrofit/Firebase]
+    subgraph Data["Data Layer"]
+        Repo["AuthRepositoryImpl<br/>- refreshToken()<br/>- revokeToken()"]
+        Store["TokenStore<br/>- EncryptedSharedPreferences<br/>- In-memory cache"]
+        SM["SessionManager<br/>- SessionState machine"]
     end
     
-    Current -.->|"Evolution"| Planned
+    subgraph Security["Security Layer"]
+        Keystore["Android Keystore<br/>- MasterKey (AES-256-GCM)"]
+        Encrypted["EncryptedSharedPreferences"]
+    end
     
-    style Current fill:#1a1a2e,stroke:#e94560,color:#ffffff
-    style Planned fill:#0f3460,stroke:#16213e,color:#ffffff
+    UC --> Repo
+    Repo --> Store
+    Store --> Encrypted
+    Encrypted --> Keystore
+    
+    style Domain fill:#333333,stroke:#D32F2F,color:#FFFFFF
+    style Data fill:#4A4A4A,stroke:#333333,color:#FFFFFF
+    style Security fill:#D32F2F,stroke:#FFFFFF,color:#FFFFFF
 ```
----
 
-## 6. Verification & Quality Assurance
-- **CI/CD**: GitHub Actions pipeline verifies every commit against build and test suites.
-- **Static Analysis**: Automated linting and ASCII metadata headers enforce code style and legal standards.
 
-## 7. File Registry and responsibilities
-Here is the updated table based on the file structure provided:
 
-| File / Module                     | Layer        | Responsibility                       | Status |
-|:----------------------------------|:-------------|:-------------------------------------|:-------|
-| `MainActivity.kt`                 | UI Layer     | Navigation orchestration             | ✅      |
-| `BaseViewModel.kt`                | UI Layer     | Loading/Error state management       | ✅      |
-| `HeaderViewModel.kt`              | UI Layer     | Session state bridging               | ✅      |
-| `PageHeader.kt` / `PageFooter.kt` | UI Layer     | Shared UI components                 | ✅      |
-| `LoginScreen.kt`                  | UI Layer     | Login UI entry point                 | ✅      |
-| `LoginViewModel.kt`               | UI Layer     | Form state & validation              | ✅      |
-| `LoginEmailField.kt`              | UI Layer     | Email input with validation          | ✅      |
-| `LoginPasswordField.kt`           | UI Layer     | Password input with security         | ✅      |
-| `LoginButton.kt`                  | UI Layer     | Login action button                  | ✅      |
-| `HomeScreen.kt`                   | UI Layer     | Home UI entry point                  | ✅      |
-| `HomeViewModel.kt`                | UI Layer     | Home state & session termination     | ✅      |
-| `ServiceList.kt`                  | UI Layer     | Service list grid component          | ✅      |
-| `ServiceItem.kt`                  | UI Layer     | Individual service item component    | ✅      |
-| `ServiceModule.kt`                | UI Layer     | Feature-specific model (Home)        | ✅      |
-| `BaseUseCase.kt`                  | Domain Layer | Standardized UseCase abstraction     | ✅      |
-| `LoginUseCase.kt`                 | Domain Layer | Atomic authentication transaction    | ✅      |
-| `LogoutUseCase.kt`                | Domain Layer | Session teardown orchestration       | ✅      |
-| `SessionManagerInterface.kt`      | Domain Layer | Session operations contract          | ✅      |
-| `AuthRepository.kt`               | Domain Layer | Authentication contract              | ✅      |
-| `SessionRepository.kt`            | Domain Layer | Session persistence contract         | ✅      |
-| `User.kt` / `Credentials.kt`      | Domain Layer | Pure Kotlin Entities                 | ✅      |
-| `SessionManager.kt`               | Data Layer   | SSOT for authentication              | ✅      |
-| `AuthRepositoryImpl.kt`           | Data Layer   | Mock auth (Firebase **planned**)     | ⚠️     |
-| `SessionRepositoryImpl.kt`        | Data Layer   | SharedPreferences (Room **planned**) | ⚠️     |
-| `RefreshTokenUseCase.kt`          | Domain Layer | Token refresh (**planned**)          | 📅     |
-| `Dagger Components`               | App Root     | DI setup (**planned**)               | 📅     |
 ## 8. References & Standards
 - **MAD (Modern Android Development)**: Adhering to official [Android Architecture Guidelines](https://developer.android.com/topic/architecture).
 - **Jetpack Compose Best Practices**: Following UDF ([Unidirectional Data Flow](https://developer.android.com/develop/ui/compose/architecture#udf)) principles for state management.

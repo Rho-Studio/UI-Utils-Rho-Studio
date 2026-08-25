@@ -55,7 +55,8 @@ We use a **Multi-Tiered Dependency Graph**. Developers must respect scope bounda
 *   **@AppScope**: For public/login logic. Lives in `AppComponent`.
 *   **@UserScope**: For authenticated user data. Lives in `UserComponent`.
 
-**CRITICAL**: Never attempt to inject a `@UserScope` dependency into a `@Singleton` class. This will cause a memory leak or a crash.
+> [!WARNING]
+> Never attempt to inject a `@UserScope` dependency into a `@Singleton` class. This will cause a memory leak or a crash.
 
 ---
 
