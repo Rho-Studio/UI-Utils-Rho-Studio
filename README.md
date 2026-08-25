@@ -18,8 +18,7 @@ Rho Studio UI is the **base application template** designed to establish and enf
 
 The application is a **Jetpack Compose** implementation following a **Single-Activity Architecture**, leveraging a reactive **MVVM (Model-View-ViewModel)** pattern, implementing a Multi-Tier Dagger Hierarchy and a fluid user experience driven by **Unidirectional Data Flow (UDF)**. This architectural foundation ensures a focus on **Fluid UX**, **Transactional Integrity**, and **Decoupled Business Logic**.
 
-
-> [!IMPORTANT] CONTRIBUTING
+> [!IMPORTANT]
 > **In order to add a new feature**: See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Core Features:
@@ -126,7 +125,7 @@ flowchart TD
     style DOMAIN fill:#4A4A4A,stroke:#333333,color:#FFFFFF
     style DATA fill:#D3D3D3,stroke:#D32F2F,color:#000000
 ```
-> [!Tip] Key Principle
+> [!Tip]
 > `:features` depend only on `:core` modules (`:core:domain`, `:core:ui`), preventing circular dependencies. Feature-specific models remain within their respective feature modules.
 
 ### 2.3 Multi-Tier Dependency Injection (Dagger 2 + KSP)
