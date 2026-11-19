@@ -560,16 +560,82 @@ Located in `:core:ui`, the design system defines the application's visual langua
 
 ## 5. Verification & Quality Assurance
 
-### 5.1 Automated Tests
+### 5.1 Testing Strategy & Pyramid
+Rho Studio UI enforces a comprehensive multi-tiered testing strategy spanning unit, integration, UI, and architectural graph validation:
 
-| Test Suite | Scope | Status |
-| :--- | :--- | :---: |
-| **DI Graph Audit** (`DaggerGraphTest`) | Verifies all components and providers (Firebase, Analytics) are correctly satisfied | <span style="color:#4CAF50">Passed</span> |
-| **Transactional Integrity** (`SessionManagerTest`) | Validates atomic state flow and DataStore synchronization | <span style="color:#4CAF50">Passed</span> |
-| **Business Logic** (`LoginUseCaseTest`, `LogoutUseCaseTest`) | 90%+ coverage of core transactions using MockK | <span style="color:#4CAF50">Passed</span> |
-| **CI/CD Build** | Verified on GitHub Actions including `google-services.json` integration | <span style="color:#4CAF50">Passed</span> |
+```mermaid
+flowchart TB
+    subgraph Pyramid["Testing Strategy Pyramid"]
+        UI_Test["UI & Instrumented Tests<br/>(TopNavigationBarIntegrationTest)"]
+        Int_Test["Integration Tests<br/>(HomeScreenIntegrationTest)"]
+        Unit_Test["Unit Tests<br/>(HomeViewModelTest, LoginUseCaseTest, SessionManagerTest)"]
+        DI_Test["Architecture & DI Graph Audit<br/>(DaggerGraphTest)"]
+    end
 
-### 5.2 Manual QA Test Plan
+    UI_Test --> Int_Test
+    Int_Test --> Unit_Test
+    Unit_Test --> DI_Test
+
+    linkStyle default stroke:#D32F2F,stroke-width:2px
+
+    classDef pyNode fill:#333333,stroke:#D32F2F,color:#FFFFFF
+    class UI_Test,Int_Test,Unit_Test,DI_Test pyNode
+
+    style Pyramid fill:#4A4A4A,stroke:#D32F2F,color:#FFFFFF
+```
+
+- **Unit Testing**: Focuses on core business logic (Domain interactors), state machines (`SessionManager`), and feature state holders (`HomeViewModel`, `LoginViewModel`) using **MockK** and **Kotlinx Coroutines Test**.
+- **Integration Testing**: Verifies multi-component state flow synchronization across presentation and domain boundaries without requiring physical device runtime overhead (`HomeScreenIntegrationTest`).
+- **Compose UI Testing**: Leverages `androidx.compose.ui.test` test rules (`createComposeRule`) to validate composable layout composition, user touch events, pill tab animation states, and card layover visual transitions (`TopNavigationBarIntegrationTest`).
+- **Architectural Graph Audit**: Validates compile-time Dagger graph resolution and scope isolation (`@UserScope` teardown on logout via `DaggerGraphTest`).
+
+### 5.2 Automated Test Suite
+
+| Test Suite | Module | Scope | Status |
+| :--- | :--- | :--- | :---: |
+| **DI Graph Audit** (`DaggerGraphTest`) | `:app` | Verifies all components and providers (Firebase, Analytics) are correctly satisfied | <span style="color:#4CAF50">Passed</span> |
+| **Transactional Integrity** (`SessionManagerTest`) | `:core:data` | Validates atomic state flow and DataStore synchronization | <span style="color:#4CAF50">Passed</span> |
+| **Business Logic** (`LoginUseCaseTest`, `LogoutUseCaseTest`) | `:core:domain` | 90%+ coverage of core transactions using MockK | <span style="color:#4CAF50">Passed</span> |
+| **ViewModel State** (`HomeViewModelTest`) | `:features:home` | Verifies default tab selection, tab mutations, and service module lists | <span style="color:#4CAF50">Passed</span> |
+| **Navigation Integration** (`HomeScreenIntegrationTest`) | `:features:home` | Validates state synchronization across all 4 feature module destinations | <span style="color:#4CAF50">Passed</span> |
+| **Compose UI Integration** (`TopNavigationBarIntegrationTest`) | `:app` | Instrumented UI test verifying tab clicks, visual transitions, and card container updates | <span style="color:#4CAF50">Passed</span> |
+| **CI/CD Build** | Global | Verified on GitHub Actions including `google-services.json` integration | <span style="color:#4CAF50">Passed</span> |
+
+### 5.3 How to Run Tests
+
+#### 1. Running Unit & Integration Tests (JVM Execution)
+No device or emulator required. Runs fast directly on the local JVM.
+
+- **Run all unit & integration tests across all modules**:
+  ```bash
+  ./gradlew test
+  ```
+- **Run integration tests for the Home navigation feature**:
+  ```bash
+  ./gradlew :features:home:test --tests "com.rho.studio.ui.features.home.HomeScreenIntegrationTest"
+  ```
+- **Run ViewModel unit tests for the Home feature**:
+  ```bash
+  ./gradlew :features:home:test --tests "com.rho.studio.ui.features.home.HomeViewModelTest"
+  ```
+
+#### 2. Running Compose UI Instrumented Tests (Device / Emulator)
+Requires a connected Android emulator or physical device.
+
+- **Run all connected instrumented UI tests**:
+  ```bash
+  ./gradlew connectedAndroidTest
+  ```
+- **Run the TopNavigationBar Compose UI integration test specifically**:
+  ```bash
+  ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.rho.studio.ui.TopNavigationBarIntegrationTest
+  ```
+
+#### 3. Running Tests Directly in Android Studio
+- **From Editor Gutter**: Open `HomeScreenIntegrationTest.kt` or `TopNavigationBarIntegrationTest.kt` and click the green **Play (▶)** icon next to the test class or function name.
+- **From Project Window**: Right-click on the `src/test` or `src/androidTest` folder and select **Run 'Tests in...'**.
+
+### 5.4 Manual QA Test Plan
 
 **Scenario 1**: Fresh Install / First Launch
 1. Open the app.
@@ -592,7 +658,7 @@ Located in `:core:ui`, the design system defines the application's visual langua
    - User input fields in Login are cleared (form reset).
    - Verification: Using Android Profiler, confirm that @UserScope objects (e.g., HomeViewModel) are cleared from heap.
 
-### 5.3 Regression Checklist for QA
+### 5.5 Regression Checklist for QA
 - Verify that no `UninitializedPropertyAccessException` occurs during rapid Login/Logout cycles.
 - Verify that the `PageHeader` reactively updates when a new user logs in.
 - Confirm that Firebase Analytics events are visible in DebugView.
