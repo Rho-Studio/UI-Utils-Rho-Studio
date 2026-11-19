@@ -51,6 +51,13 @@ class HomeViewModel @Inject constructor(
     private val _navigateToService = MutableStateFlow<String?>(null)
     val navigateToService: StateFlow<String?> = _navigateToService.asStateFlow()
 
+    private val _selectedTabId = MutableStateFlow("inv")
+    val selectedTabId: StateFlow<String> = _selectedTabId.asStateFlow()
+
+    fun selectTab(tabId: String) {
+        _selectedTabId.value = tabId
+    }
+
     fun onServiceClick(serviceId: String) {
         _navigateToService.value = serviceId
     }

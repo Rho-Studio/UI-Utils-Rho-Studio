@@ -3,7 +3,7 @@ name: Android Debug CI/CD Rho.Studio®
 on:
   workflow_dispatch: 
   push:
-    branches: [ "37-data-layer-and-dagger-di" ]
+    branches: [ "48-navigation-uis" ]
   pull_request:
     branches: [ "dev" , "pre-release" ]
 
