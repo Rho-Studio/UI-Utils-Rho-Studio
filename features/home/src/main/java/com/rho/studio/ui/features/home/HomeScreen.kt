@@ -10,7 +10,7 @@
  * File:         HomeScreen.kt (composable UI)
  * Author:       Alexis Tercero
  * Email:        alexis.tercero@rho.studio
- * Date:         2026-08-06
+ * Date:         2026-11-19
  * ============================================================================
  * Description:
  *      The primary landing screen of the application, serving as the main
@@ -80,15 +80,15 @@ fun HomeScreen(
                 )
             )
     ) {
+        PageHeader(
+            viewModel = headerViewModel,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         TopNavigationBar(
             items = navItems,
             selectedItemId = selectedTabId,
             onTabSelected = { homeViewModel.selectTab(it) },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        PageHeader(
-            viewModel = headerViewModel,
             modifier = Modifier.fillMaxWidth()
         )
 
